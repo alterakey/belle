@@ -1,3 +1,5 @@
+import re
+
 class PixelCoords(object):
     def __init__(self, width, height, minimum=None):
         self.width = width
