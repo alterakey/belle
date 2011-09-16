@@ -1,0 +1,44 @@
+def render():
+    import sys
+    import xml.etree.ElementTree as ET
+    import Image, ImageDraw
+
+    from belle.asset import AssetFactory
+    from belle.glyph import Character, OutlinedGlyphWriter, NormalMapping
+    from belle.tools import HTMLColorParser, PixelCoords
+    from belle.image import Img, ImgWriter
+
+    root = ET.XML(sys.stdin.read())
+
+    paper_width = int(root.attrib['width'])
+    paper_height = int(root.attrib['height'])
+    im = Image.new('RGBA', (paper_width, paper_height), (255,255,255,255))
+    draw = ImageDraw.Draw(im)
+
+    for layer in root.findall('layer'):
+        with AssetFactory(sys.argv[1]) as assets:
+            for img_ in layer.findall('image'):
+                img = Img(src=assets.get('image', img_.attrib['src']),
+                          x=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('x', 0))),
+                          y=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('y', 0))),
+                          width=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('width', 0))),
+                          height=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('height', 0))),
+                          rotation=float(img_.attrib.get('rotation', 0)))
+                ImgWriter(img).write(im)
+                
+            for char_ in layer.findall('char'):
+                char = Character(char=char_.text,
+                                 x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
+                                 y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
+                                 width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
+                                 height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
+                                 rotation=float(char_.attrib.get('rotation', 0)),
+                                 face=assets.get('font', char_.attrib.get('face', u'')),
+                                 outline_color=HTMLColorParser(char_.attrib.get('outline-color', u'#ffffff')).rgba(),
+                                 outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge'))))
+                OutlinedGlyphWriter(char).write(im, mapping=NormalMapping)
+                
+    im.convert('RGB').save(sys.stdout, format="JPEG")
+
+if __name__ == '__main__':
+    render()

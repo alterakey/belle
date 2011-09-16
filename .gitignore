@@ -1,0 +1,9 @@
+*.pyc
+*.egg-info
+*.egg
+*~
+*.orig
+*.rej
+dist
+*.db
+data
