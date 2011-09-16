@@ -9,7 +9,8 @@ CHANGES = open(os.path.join(here, 'CHANGES.txt')).read()
 
 requires = [
     'SQLAlchemy',
-    'PIL'
+    'PIL',
+    'freetype-py'
     ]
 
 if sys.version_info[:3] < (2,5,0):
