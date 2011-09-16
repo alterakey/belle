@@ -31,6 +31,7 @@ setup(
     url="http://github.com/taky/belle",
     license='GPL',
     packages=find_packages(exclude=['tests']),
+    install_requires = requires,
     include_package_data=True,
     zip_safe=False,
     test_suite='nose.collector',
