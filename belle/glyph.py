@@ -30,13 +30,29 @@ class OutlinedGlyphWriter(object):
     def write(self, to, mapping=None):
         if mapping is None:
             mapping = NormalMapping
-        draw = ImageDraw.Draw(to)
-        glyph = self._write_glyph(self._load_glyph_outline())
-        draw.bitmap(mapping(self.char.height).map(self.char, glyph), glyph, self.outline_color)
-        if self.char.is_filled():
-            glyph = self._write_glyph(self._load_glyph())
-            draw.bitmap(mapping(self.char.height).map(self.char, glyph), glyph, self.color)
+        glyph_ = self.composite(self._load_glyph(), self._load_glyph_outline())
+        to.paste(glyph_, mapping(self.char.height).map(self.char, glyph_), glyph_)
 
+    def composite(self, fill_glyph, outline_glyph):
+        size = (1, 1)
+        if self.char.is_filled():
+            fill_mask = self._write_glyph(self._load_glyph())
+            size = map(max, size, fill_mask.size)
+        if self.char.is_outlined():
+            outline_mask = self._write_glyph(self._load_glyph_outline())
+            size = map(max, size, outline_mask.size)
+
+        out = Image.new("RGBA", size, (0,0,0,0))
+        draw = ImageDraw.Draw(out)
+
+        if self.char.is_outlined():
+            draw.bitmap((0, 0), outline_mask, self.outline_color)
+        if self.char.is_filled():
+            draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.color)
+        if self.char.rotation:
+            out = out.rotate(self.char.rotation, expand=1)
+        return out
+        
     def _load_glyph(self):
         face = freetype.Face(self.face_name)
         face.set_char_size(int(self.char_size * 64))
@@ -54,10 +70,7 @@ class OutlinedGlyphWriter(object):
         blyph = glyph.to_bitmap(freetype.FT_RENDER_MODE_NORMAL, freetype.Vector(0,0))
         self.char.set_bitmap_offset((blyph.left, -blyph.top))
         bitmap = blyph.bitmap
-        base = FT2Bitmap(bitmap).to_pil_image()
-        if self.char.rotation:
-            base = base.rotate(self.char.rotation, expand=1)
-        return base
+        return FT2Bitmap(bitmap).to_pil_image()
 
     def _write_outline(self):
         return self._write_glyph(self._load_glyph_outline())
