@@ -36,6 +36,7 @@ $ cat <<__EOT__ | python -m belle.command sqlite:///assets.db > hoge.jpg
           rotate="0.0"
           outline-color="#000000"
           outline-edge="0.000806451"
+	  tate="tate"
           face="A-OTF-ShinMGoPro-Medium.otf">強</char>
     <char x="0.18"
           y="0.14"
@@ -44,6 +45,7 @@ $ cat <<__EOT__ | python -m belle.command sqlite:///assets.db > hoge.jpg
           rotate="0.0"
           outline-color="#000000"
           outline-edge="0.000806451"
+	  tate="tate"
           face="A-OTF-GothicMB101Pro-Heavy.otf">敵</char>
   </layer>
 </design>
