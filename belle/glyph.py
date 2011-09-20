@@ -64,7 +64,7 @@ class GlyphWriter(object):
 
     def _write_glyph(self, glyph):
         blyph = glyph.to_bitmap(freetype.FT_RENDER_MODE_NORMAL, freetype.Vector(0,0))
-        self.char.set_bitmap_offset((blyph.left, -blyph.top))
+        self.char.set_bitmap_geom((blyph.left, -blyph.top, blyph.bitmap.width, blyph.bitmap.rows))
         bitmap = blyph.bitmap
         return FT2Bitmap(bitmap).to_pil_image()
 
@@ -83,6 +83,8 @@ class Character(object):
         self.tate = tate
         self._left = 0
         self._top = 0
+        self._width = 0
+        self._height = 0
 
         if not self.outline_width > 0.0:
             self.outline_width = None
@@ -90,11 +92,11 @@ class Character(object):
         if self.policy.should_rotate:
             self.rotation += 90.0
 
-    def set_bitmap_offset(self, offset):
-        self._left, self._top = offset
+    def set_bitmap_geom(self, geom):
+        self._left, self._top, self._width, self._height = geom
 
-    def get_bitmap_offset(self):
-        return (self._left, self._top)
+    def get_bitmap_geom(self):
+        return (self._left, self._top, self._width, self._height)
 
     def is_outlined(self):
         return self.outline_color is not None and self.outline_width is not None
@@ -114,14 +116,17 @@ class NormalMapping(object):
         self.glyph_size = glyph_size
 
     def map(self, char, glyph):
-        x, y = char.get_bitmap_offset()
-        x -= self.glyph_size / 2
-        y -= self.glyph_size / 2
-        y += self.glyph_size
+        x, y, w, h = char.get_bitmap_geom()
         if not char.policy.should_transpose:
-            return (char.x + x, char.y + y)
+            y += self.glyph_size
+            return (char.x + x - self.glyph_size / 2, char.y + y - self.glyph_size / 2)
         else:
-            return (char.x + y, char.y + x)
+            if char.policy.should_rotate:
+                y += self.glyph_size
+                return (char.x + y - h / 2 - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
+            else:
+                y += self.glyph_size
+                return (char.x + y - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
 
 import re
 import unicodedata
