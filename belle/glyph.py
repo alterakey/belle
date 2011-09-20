@@ -19,15 +19,19 @@ class OutlinedGlyphWriter(object):
         self.char = char
         self.face_name = char.face
         self.char_size = char.height
+        self.color = char.color
         self.outline_width = char.outline_width
         self.outline_color = char.outline_color
         
     def write(self, to, mapping=None):
         if mapping is None:
             mapping = NormalMapping
-        glyph = self._write_glyph()
         draw = ImageDraw.Draw(to)
+        glyph = self._write_glyph(self._load_glyph_outline())
         draw.bitmap(mapping(self.char.height).map(self.char, glyph), glyph, self.outline_color)
+        if self.char.is_filled():
+            glyph = self._write_glyph(self._load_glyph())
+            draw.bitmap(mapping(self.char.height).map(self.char, glyph), glyph, self.color)
 
     def _load_glyph(self):
         face = freetype.Face(self.face_name)
@@ -35,26 +39,24 @@ class OutlinedGlyphWriter(object):
         face.load_char(self.char.char, freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP)
         return face.glyph.get_glyph()
 
-    def _write_base(self):
+    def _load_glyph_outline(self):
         glyph = self._load_glyph()
         stroker = freetype.Stroker()
         stroker.set(int(self.outline_width * 64), freetype.FT_STROKER_LINECAP_ROUND, freetype.FT_STROKER_LINEJOIN_ROUND, 0 )
         glyph.stroke(stroker)
-        bitmap = glyph.to_bitmap(freetype.FT_RENDER_MODE_NORMAL, freetype.Vector(0,0)).bitmap 
-        return FT2Bitmap(bitmap).to_pil_image()
+        return glyph
 
-    def _write_glyph(self):
-        base = self._write_base()
-        glyph = self._load_glyph()
+    def _write_glyph(self, glyph):
         blyph = glyph.to_bitmap(freetype.FT_RENDER_MODE_NORMAL, freetype.Vector(0,0))
         self.char.set_bitmap_offset((blyph.left, -blyph.top))
         bitmap = blyph.bitmap
-        mask = FT2Bitmap(bitmap).to_pil_image()
-        draw = ImageDraw.Draw(base)
-        draw.bitmap((self.outline_width, self.outline_width), mask, 0)
+        base = FT2Bitmap(bitmap).to_pil_image()
         if self.char.rotation:
             base = base.rotate(self.char.rotation, expand=1)
         return base
+
+    def _write_outline(self):
+        return self._write_glyph(self._load_glyph_outline())
 
 class GlyphWriter(object):
     def __init__(self, char):
@@ -63,12 +65,12 @@ class GlyphWriter(object):
         self.char_size = char.height
         self.color = char.color
         
-    def write(self):
-        mask = self._write_glyph()
-        im = Image.new('RGBA', mask.size, (0,0,0,255))
-        draw = ImageDraw.Draw(im)
-        draw.bitmap((0, 0), mask, self.color)
-        return im
+    def write(self, to, mapping=None):
+        if mapping is None:
+            mapping = NormalMapping
+        glyph = self._write_glyph()
+        draw = ImageDraw.Draw(to)
+        draw.bitmap(mapping(self.char.height).map(self.char, glyph), glyph, self.color)
 
     def _load_glyph(self):
         face = freetype.Face(self.face_name)
@@ -87,7 +89,7 @@ class GlyphWriter(object):
         return base
 
 class Character(object):
-    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, outline_color=None, outline_width=None):
+    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None):
         self.char = char
         self.x = x
         self.y = y
@@ -95,6 +97,7 @@ class Character(object):
         self.height = height
         self.rotation = rotation
         self.face = face
+        self.color = color
         self.outline_color = outline_color
         self.outline_width = outline_width
         self._left = None
@@ -108,6 +111,9 @@ class Character(object):
 
     def is_outlined(self):
         return self.outline_color is not None
+
+    def is_filled(self):
+        return self.color is not None
 
 class NormalMapping(object):
     def __init__(self, glyph_size):

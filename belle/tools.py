@@ -29,8 +29,10 @@ class HTMLColorParser(object):
         self.color = color
 
     def rgba(self):
-        m = re.match(u'#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})', self.color)
-        if not m:
-            raise ValueError(u'input does not look like HTML #RRGGBB color code (%s)' % self.color)
-        return (int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16), 255)
-
+        if self.color is not None:
+            m = re.match(u'#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})', self.color)
+            if not m:
+                raise ValueError(u'input does not look like HTML #RRGGBB color code (%s)' % self.color)
+            return (int(m.group(1), 16), int(m.group(2), 16), int(m.group(3), 16), 255)
+        else:
+            return None
