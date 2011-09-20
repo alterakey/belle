@@ -21,11 +21,6 @@ class FT2Bitmap(object):
 class GlyphWriter(object):
     def __init__(self, char):
         self.char = char
-        self.face_name = char.face
-        self.char_size = char.height
-        self.color = char.color
-        self.outline_width = char.outline_width
-        self.outline_color = char.outline_color
         
     def write(self, to, mapping=None):
         if mapping is None:
@@ -46,23 +41,23 @@ class GlyphWriter(object):
         draw = ImageDraw.Draw(out)
 
         if self.char.is_outlined():
-            draw.bitmap((0, 0), outline_mask, self.outline_color)
+            draw.bitmap((0, 0), outline_mask, self.char.outline_color)
         if self.char.is_filled():
-            draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.color)
+            draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
         if self.char.rotation:
             out = out.rotate(self.char.rotation, expand=1)
         return out
         
     def _load_glyph(self):
-        face = freetype.Face(self.face_name)
-        face.set_char_size(int(self.char_size * 64))
+        face = freetype.Face(self.char.face)
+        face.set_char_size(int(self.char.height * 64))
         face.load_char(self.char.char, freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP)
         return face.glyph.get_glyph()
 
     def _load_glyph_outline(self):
         glyph = self._load_glyph()
         stroker = freetype.Stroker()
-        stroker.set(int(self.outline_width * 64), freetype.FT_STROKER_LINECAP_ROUND, freetype.FT_STROKER_LINEJOIN_ROUND, 0 )
+        stroker.set(int(self.char.outline_width * 64), freetype.FT_STROKER_LINECAP_ROUND, freetype.FT_STROKER_LINEJOIN_ROUND, 0 )
         glyph.stroke(stroker)
         return glyph
 
