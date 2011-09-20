@@ -30,10 +30,10 @@ class GlyphWriter(object):
     def write(self, to, mapping=None):
         if mapping is None:
             mapping = NormalMapping
-        glyph_ = self.composite(self._load_glyph(), self._load_glyph_outline())
+        glyph_ = self._composite(self._load_glyph(), self._load_glyph_outline())
         to.paste(glyph_, mapping(self.char.height).map(self.char, glyph_), glyph_)
 
-    def composite(self, fill_glyph, outline_glyph):
+    def _composite(self, fill_glyph, outline_glyph):
         size = (1, 1)
         if self.char.is_filled():
             fill_mask = self._write_glyph(self._load_glyph())
