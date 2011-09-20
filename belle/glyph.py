@@ -139,27 +139,28 @@ class YokogakiGlyphPolicy(object):
         return False
 
 class TategakiGlyphPolicy(object):
-    always_rotate_list = u'＝ー'
+    always_rotate_list = u'＝ー…‥'
 
     def __init__(self, char):
         self.char = char
         self.name = unicodedata.name(char)
         self.category = unicodedata.category(char)
+        self.east_asian_width = unicodedata.east_asian_width(char)
 
     @property
     def should_rotate(self):
         if self.char in self.always_rotate_list:
             return True
-        if re.search(u'^(KATAK|HIRAG)ANA', self.name):
-            return False
-        if re.search(u'IDEOGRAPH|FULLWIDTH', self.name):
-            if re.search(u'BRACKET|PARENTHESIS|TILDA', self.name):
+        if self.east_asian_width in ('W', 'F', 'A'):
+            if re.search(u'BRACKET|PARENTHESIS|TILDA|DASH', self.name):
                 return True
             return False
         return True
 
     @property
     def should_transpose(self):
+        if self.should_rotate:
+            return True
         if re.search(u'(KATAK|HIRAG)ANA LETTER SMALL', self.name):
             return True
         if re.search(u'IDEOGRAPHIC', self.name):
