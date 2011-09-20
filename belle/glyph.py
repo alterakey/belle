@@ -87,6 +87,9 @@ class Character(object):
         if not self.outline_width > 0.0:
             self.outline_width = None
 
+        if self.policy.should_rotate:
+            self.rotation -= 90.0
+
     def set_bitmap_offset(self, offset):
         self._left, self._top = offset
 
@@ -99,9 +102,14 @@ class Character(object):
     def is_filled(self):
         return self.color is not None
 
-class NormalMapping(object):
-    need_tate_format = u'ぁぃぅぇぉゃゅょっァィゥェォャュョッ、。「」…‥・ー−—〜'
+    @property
+    def policy(self):
+        if self.tate:
+            return TategakiGlyphPolicy(self.char)
+        else:
+            return YokogakiGlyphPolicy(self.char)
 
+class NormalMapping(object):
     def __init__(self, glyph_size):
         self.glyph_size = glyph_size
 
@@ -110,8 +118,51 @@ class NormalMapping(object):
         x -= self.glyph_size / 2
         y -= self.glyph_size / 2
         y += self.glyph_size
-        if char.tate and char.char in self.need_tate_format:
-            return (char.x + y, char.y + x)
-        else:
+        if not char.policy.should_transpose:
             return (char.x + x, char.y + y)
+        else:
+            return (char.x + y, char.y + x)
 
+import re
+import unicodedata
+
+class YokogakiGlyphPolicy(object):
+    def __init__(self, char):
+        pass
+
+    @property
+    def should_rotate(self):
+        return False
+
+    @property
+    def should_transpose(self):
+        return False
+
+class TategakiGlyphPolicy(object):
+    always_rotate_list = u'＝ー'
+
+    def __init__(self, char):
+        self.char = char
+        self.name = unicodedata.name(char)
+        self.category = unicodedata.category(char)
+
+    @property
+    def should_rotate(self):
+        if self.char in self.always_rotate_list:
+            return True
+        if re.search(u'^(KATAK|HIRAG)ANA', self.name):
+            return False
+        if re.search(u'IDEOGRAPH|FULLWIDTH', self.name):
+            if re.search(u'BRACKET|PARENTHESIS|TILDA', self.name):
+                return True
+            return False
+        return True
+
+    @property
+    def should_transpose(self):
+        if re.search(u'(KATAK|HIRAG)ANA LETTER SMALL', self.name):
+            return True
+        if re.search(u'IDEOGRAPHIC', self.name):
+            if self.category.startswith(u'P'):
+                return True
+        return False
