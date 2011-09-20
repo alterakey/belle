@@ -36,7 +36,7 @@ def render():
                                  face=assets.get('font', char_.attrib.get('face', u'')),
                                  color=HTMLColorParser(char_.attrib.get('color')).rgba(),
                                  outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
-                                 outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge'))))
+                                 outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))))
                 GlyphWriter(char).write(im, mapping=NormalMapping)
                 
     im.convert('RGB').save(sys.stdout, format="JPEG")

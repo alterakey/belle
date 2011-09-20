@@ -84,8 +84,11 @@ class Character(object):
         self.color = color
         self.outline_color = outline_color
         self.outline_width = outline_width
-        self._left = None
-        self._top = None
+        self._left = 0
+        self._top = 0
+
+        if not self.outline_width > 0.0:
+            self.outline_width = None
 
     def set_bitmap_offset(self, offset):
         self._left, self._top = offset
@@ -94,7 +97,7 @@ class Character(object):
         return (self._left, self._top)
 
     def is_outlined(self):
-        return self.outline_color is not None
+        return self.outline_color is not None and self.outline_width is not None
 
     def is_filled(self):
         return self.color is not None
