@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 
 import re
@@ -68,7 +69,7 @@ class GlyphWriter(object):
         return FT2Bitmap(bitmap).to_pil_image()
 
 class Character(object):
-    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None):
+    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None, tate=False):
         self.char = char
         self.x = x
         self.y = y
@@ -79,6 +80,7 @@ class Character(object):
         self.color = color
         self.outline_color = outline_color
         self.outline_width = outline_width
+        self.tate = tate
         self._left = 0
         self._top = 0
 
@@ -98,14 +100,18 @@ class Character(object):
         return self.color is not None
 
 class NormalMapping(object):
+    need_tate_format = u'ぁぃぅぇぉゃゅょっァィゥェォャュョッ、。「」…‥・ー−—〜'
+
     def __init__(self, glyph_size):
         self.glyph_size = glyph_size
 
     def map(self, char, glyph):
         x, y = char.get_bitmap_offset()
-        y += self.glyph_size
-
         x -= self.glyph_size / 2
         y -= self.glyph_size / 2
-        return (char.x + x, char.y + y)
+        y += self.glyph_size
+        if char.tate and char.char in self.need_tate_format:
+            return (char.x + y, char.y + x)
+        else:
+            return (char.x + x, char.y + y)
 

@@ -28,15 +28,16 @@ def render():
                 
             for char_ in layer.findall('char'):
                 char = Character(char=char_.text,
-                                 x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
-                                 y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
+                                 x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0)) + 0.10),
+                                 y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0)) + 0.10),
                                  width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
                                  height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
                                  rotation=float(char_.attrib.get('rotation', 0)),
                                  face=assets.get('font', char_.attrib.get('face', u'')),
                                  color=HTMLColorParser(char_.attrib.get('color')).rgba(),
                                  outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
-                                 outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))))
+                                 outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
+                                 tate=(char_.attrib.get('tate') is not None))
                 GlyphWriter(char).write(im, mapping=NormalMapping)
                 
     im.convert('RGB').save(sys.stdout, format="JPEG")
