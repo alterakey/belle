@@ -45,4 +45,7 @@ def render():
     im.convert('RGB').save(sys.stdout, format="JPEG")
 
 if __name__ == '__main__':
+    import sys
+    import logging
+    logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     render()

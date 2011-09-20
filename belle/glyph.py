@@ -6,6 +6,10 @@ import sys
 import freetype
 import Image, ImageDraw
 
+import logging
+
+log = logging.getLogger(__name__)
+
 class FT2Bitmap(object):
     def __init__(self, bitmap):
         self.bitmap = bitmap
