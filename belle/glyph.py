@@ -18,7 +18,7 @@ class FT2Bitmap(object):
         data = ''.join([struct.pack('B', c) for c in self.bitmap.buffer])
         return Image.frombuffer("L", (self.bitmap.width, self.bitmap.rows), data, "raw", "L", 0, 1)
 
-class OutlinedGlyphWriter(object):
+class GlyphWriter(object):
     def __init__(self, char):
         self.char = char
         self.face_name = char.face
@@ -71,39 +71,6 @@ class OutlinedGlyphWriter(object):
         self.char.set_bitmap_offset((blyph.left, -blyph.top))
         bitmap = blyph.bitmap
         return FT2Bitmap(bitmap).to_pil_image()
-
-    def _write_outline(self):
-        return self._write_glyph(self._load_glyph_outline())
-
-class GlyphWriter(object):
-    def __init__(self, char):
-        self.char = char
-        self.face_name = char.face
-        self.char_size = char.height
-        self.color = char.color
-        
-    def write(self, to, mapping=None):
-        if mapping is None:
-            mapping = NormalMapping
-        glyph = self._write_glyph()
-        draw = ImageDraw.Draw(to)
-        draw.bitmap(mapping(self.char.height).map(self.char, glyph), glyph, self.color)
-
-    def _load_glyph(self):
-        face = freetype.Face(self.face_name)
-        face.set_char_size(int(self.char_size * 64))
-        face.load_char(self.char.char, freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP)
-        return face.glyph.get_glyph()
-
-    def _write_glyph(self):
-        glyph = self._load_glyph()
-        blyph = glyph.to_bitmap(freetype.FT_RENDER_MODE_NORMAL, freetype.Vector(0,0))
-        self.char.set_bitmap_offset((blyph.left, -blyph.top))
-        bitmap = blyph.bitmap
-        base = FT2Bitmap(bitmap).to_pil_image()
-        if self.char.rotation:
-            base = base.rotate(self.char.rotation, expand=1)
-        return base
 
 class Character(object):
     def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None):

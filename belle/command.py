@@ -4,7 +4,7 @@ def render():
     import Image, ImageDraw
 
     from belle.asset import AssetFactory
-    from belle.glyph import Character, OutlinedGlyphWriter, NormalMapping
+    from belle.glyph import Character, GlyphWriter, NormalMapping
     from belle.tools import HTMLColorParser, PixelCoords
     from belle.image import Img, ImgWriter
 
@@ -35,12 +35,9 @@ def render():
                                  rotation=float(char_.attrib.get('rotation', 0)),
                                  face=assets.get('font', char_.attrib.get('face', u'')),
                                  color=HTMLColorParser(char_.attrib.get('color')).rgba(),
-                                 outline_color=HTMLColorParser(char_.attrib.get('outline-color', u'#ffffff')).rgba(),
+                                 outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
                                  outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge'))))
-                if char.is_outlined():
-                    OutlinedGlyphWriter(char).write(im, mapping=NormalMapping)
-                else:
-                    GlyphWriter(char).write(im, mapping=NormalMapping)
+                GlyphWriter(char).write(im, mapping=NormalMapping)
                 
     im.convert('RGB').save(sys.stdout, format="JPEG")
 
