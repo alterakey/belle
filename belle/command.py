@@ -28,8 +28,8 @@ def render():
                 
             for char_ in layer.findall('char'):
                 char = Character(char=char_.text,
-                                 x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0)) + 0.10),
-                                 y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0)) + 0.10),
+                                 x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
+                                 y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
                                  width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
                                  height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
                                  rotation=float(char_.attrib.get('rotation', 0)),
