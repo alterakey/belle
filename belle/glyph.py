@@ -88,7 +88,7 @@ class Character(object):
             self.outline_width = None
 
         if self.policy.should_rotate:
-            self.rotation -= 90.0
+            self.rotation += 90.0
 
     def set_bitmap_offset(self, offset):
         self._left, self._top = offset
