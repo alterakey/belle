@@ -120,16 +120,18 @@ class NormalMapping(object):
         x, y, w, h = char.get_bitmap_geom()
         if not char.policy.should_transpose:
             y += self.glyph_size
-            return (char.x + x - self.glyph_size / 2, char.y + y - self.glyph_size / 2)
         else:
+            y, x = x, y
+
             if char.policy.should_rotate:
                 if char.policy.should_realign_to_center:
-                    y = -h / 2 + self.glyph_size / 2
+                    x = -h / 2 + self.glyph_size / 2
                 else:
-                    y = -y - h
+                    x = -x - h
             else:
-                y = self.glyph_size - w
-            return (char.x + y - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
+                x = self.glyph_size - w
+
+        return (char.x + x - self.glyph_size / 2, char.y + y - self.glyph_size / 2)
             
 class YokogakiGlyphPolicy(object):
     def __init__(self, char):
