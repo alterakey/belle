@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
+import logging
 import re
 import struct
 import sys
+import unicodedata
+
 import freetype
 import Image, ImageDraw
-
-import logging
 
 log = logging.getLogger(__name__)
 
@@ -130,9 +131,6 @@ class NormalMapping(object):
                 y = self.glyph_size - w
             return (char.x + y - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
             
-import re
-import unicodedata
-
 class YokogakiGlyphPolicy(object):
     def __init__(self, char):
         pass
