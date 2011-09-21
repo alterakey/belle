@@ -46,7 +46,7 @@ class GlyphWriter(object):
         if self.char.is_filled():
             draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
         if self.char.rotation:
-            out = out.rotate(self.char.rotation, expand=1)
+            out = out.rotate(-self.char.rotation, expand=1)
         return out
         
     def _load_glyph(self):
