@@ -122,7 +122,10 @@ class NormalMapping(object):
             return (char.x + x - self.glyph_size / 2, char.y + y - self.glyph_size / 2)
         else:
             if char.policy.should_rotate:
-                y = -y - h
+                if char.policy.should_realign_to_center:
+                    y = -h / 2 + self.glyph_size / 2
+                else:
+                    y = -y - h
             else:
                 y = self.glyph_size - w
             return (char.x + y - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
@@ -142,8 +145,13 @@ class YokogakiGlyphPolicy(object):
     def should_transpose(self):
         return False
 
+    @property
+    def should_realign_to_center(self):
+        return False
+
 class TategakiGlyphPolicy(object):
     always_rotate_list = u'＝ー…‥'
+    always_realign_list = always_rotate_list
 
     def __init__(self, char):
         self.char = char
@@ -170,4 +178,12 @@ class TategakiGlyphPolicy(object):
         if re.search(u'IDEOGRAPHIC', self.name):
             if self.category.startswith(u'P'):
                 return True
+        return False
+
+    @property
+    def should_realign_to_center(self):
+        if self.char in self.always_realign_list:
+            return True
+        if re.search(u'TILDA|DASH', self.name):
+            return True
         return False
