@@ -122,12 +122,11 @@ class NormalMapping(object):
             return (char.x + x - self.glyph_size / 2, char.y + y - self.glyph_size / 2)
         else:
             if char.policy.should_rotate:
-                y += self.glyph_size
-                return (char.x + y - h / 2 - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
+                y = -y - h
             else:
-                y += self.glyph_size
-                return (char.x + y - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
-
+                y = self.glyph_size - w
+            return (char.x + y - self.glyph_size / 2, char.y + x - self.glyph_size / 2)
+            
 import re
 import unicodedata
 
