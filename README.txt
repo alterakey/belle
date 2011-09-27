@@ -26,7 +26,7 @@ $ cat <<__EOT__ | python -m belle.command render sqlite:///assets.db > hoge.jpg
            width="1.0"
            height="1.0"
            rotate="0.0"
-           src="image0.png" />
+           src="<assetid>" />
   </layer>
   <layer>
     <char x="0.08"
@@ -37,7 +37,7 @@ $ cat <<__EOT__ | python -m belle.command render sqlite:///assets.db > hoge.jpg
           outline-color="#000000"
           outline-edge="0.000806451"
 	  tate="tate"
-          face="A-OTF-ShinMGoPro-Medium.otf">強</char>
+          face="<assetid>">強</char>
     <char x="0.18"
           y="0.14"
           width="0.10"
@@ -46,7 +46,7 @@ $ cat <<__EOT__ | python -m belle.command render sqlite:///assets.db > hoge.jpg
           outline-color="#000000"
           outline-edge="0.000806451"
 	  tate="tate"
-          face="A-OTF-GothicMB101Pro-Heavy.otf">敵</char>
+          face="<assetid>">敵</char>
   </layer>
 </design>
 __EOT__
@@ -55,4 +55,4 @@ __EOT__
 2. THUMBNAIL GENERATION
 -------------------------
 
-$ python -m belle.command generate-thumbnail x y < hoge.jpg > thumb.jpg
+$ python -m belle.command generate-thumbnail <assetid> x y

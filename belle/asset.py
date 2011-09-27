@@ -12,10 +12,10 @@ class AssetOperator(object):
         self.conn = conn
 
     def match(self, key):
-        return self.conn.execute(sa.sql.select([self.table.c.blob], self.table.c.name == key))
+        return self.conn.execute(sa.sql.select([self.table.c.blob], self.table.c.hash == key))
 
     def update_thumbnail(self, key, thumbnail):
-        self.conn.execute(self.table.update(self.table.c.name == key, {self.table.c.thumbnail:thumbnail}))
+        self.conn.execute(self.table.update(self.table.c.hash == key, {self.table.c.thumbnail:thumbnail}))
 
 class AssetFactoryBase(object):
     def cleanup(self):

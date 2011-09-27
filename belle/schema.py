@@ -9,6 +9,7 @@ asset_table = sa.Table(
     sa.Column('user_id', sa.Integer, nullable=True),
     sa.Column('name', sa.Unicode(255), nullable=False),
     sa.Column('type', sa.Unicode(255), nullable=False),
+    sa.Column('hash', sa.String(255), nullable=False, unique=True),
     sa.Column('blob', sa_mysql.LONGBLOB),
     sa.Column('thumbnail', sa_mysql.LONGBLOB)
 )
