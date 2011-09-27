@@ -79,7 +79,10 @@ class AssetThumbnailGenerator(object):
             txn = assets.connect().begin()
             try:
                 for key in keys:
-                    src = Image.open(assets.get('image/jpeg', key))
+                    try:
+                        src = Image.open(assets.get('image/jpeg', key))
+                    except IOError:
+                        src = Image.new("RGB", (self.x, self.y), (128,128,128))
                     dest = cStringIO.StringIO()
                     src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
                     AssetOperator(assets.conn).update_thumbnail(key, dest)
