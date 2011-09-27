@@ -1,4 +1,4 @@
-def render():
+def render(asset_url):
     import sys
     import xml.etree.ElementTree as ET
     import Image, ImageDraw
@@ -16,7 +16,7 @@ def render():
     draw = ImageDraw.Draw(im)
 
     for layer in root.findall('layer'):
-        with AssetFactory(sys.argv[1]) as assets:
+        with AssetFactory(asset_url) as assets:
             for img_ in layer.findall('image'):
                 img = Img(src=assets.get('image', img_.attrib['src']),
                           x=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('x', 0))),
@@ -42,8 +42,21 @@ def render():
                 
     im.convert('RGB').save(sys.stdout, format="JPEG")
 
+def generate_thumbnail(x, y):
+    import sys
+    import Image
+    x, y = int(x), int(y)
+
+    src = Image.open(sys.stdin)
+    return src.resize((x, y), Image.ANTIALIAS).convert("RGB").save(sys.stdout, format="JPEG")
+
 if __name__ == '__main__':
     import sys
     import logging
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
-    render()
+    
+    mode = sys.argv[1]
+    if mode == 'render':
+        render(sys.argv[2])
+    elif mode == 'generate-thumbnail':
+        generate_thumbnail(sys.argv[2], sys.argv[3])
