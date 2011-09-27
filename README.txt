@@ -16,7 +16,7 @@ A-OTF-ShinMGoPro-Medium.otf|font|4759804
 image0.png|image|3838071
 ...
 
-$ cat <<__EOT__ | python -m belle.command sqlite:///assets.db > hoge.jpg
+$ cat <<__EOT__ | python -m belle.command render sqlite:///assets.db > hoge.jpg
 <?xml version="1.0"?>
 <design width="2480"
         height="3508">
@@ -50,3 +50,9 @@ $ cat <<__EOT__ | python -m belle.command sqlite:///assets.db > hoge.jpg
   </layer>
 </design>
 __EOT__
+
+
+2. THUMBNAIL GENERATION
+-------------------------
+
+$ python -m belle.command generate-thumbnail x y < hoge.jpg > thumb.jpg
