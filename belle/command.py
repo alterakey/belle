@@ -42,13 +42,11 @@ def render(asset_url):
                 
     im.convert('RGB').save(sys.stdout, format="JPEG")
 
-def generate_thumbnail(x, y):
-    import sys
-    import Image
-    x, y = int(x), int(y)
+def generate_thumbnail(asset_url, asset_id, x, y):
+    from belle.asset import AssetThumbnailGenerator
 
-    src = Image.open(sys.stdin)
-    return src.resize((x, y), Image.ANTIALIAS).convert("RGB").save(sys.stdout, format="JPEG")
+    x, y = int(x), int(y)
+    return AssetThumbnailGenerator(asset_url, x, y).generate(asset_id)
 
 if __name__ == '__main__':
     import sys
@@ -59,4 +57,4 @@ if __name__ == '__main__':
     if mode == 'render':
         render(sys.argv[2])
     elif mode == 'generate-thumbnail':
-        generate_thumbnail(sys.argv[2], sys.argv[3])
+        generate_thumbnail(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
