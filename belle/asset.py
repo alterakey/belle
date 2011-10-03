@@ -19,7 +19,7 @@ class AssetOperator(object):
         self.conn.execute(self.table.update(self.table.c.hash == key, {self.table.c.thumbnail:thumbnail}))
 
 class AssetFactoryBase(object):
-    class BlobCache(object):
+    class FileCache(object):
         def __init__(self):
             self.content = dict()
 
@@ -40,13 +40,13 @@ class AssetFactoryBase(object):
             self.content.clear()
 
     def __init__(self, *args, **kwargs):
-        self.blobs = self.BlobCache()
+        self.files = self.FileCache()
 
     def get(self, type, key):
-        if key not in self.blobs:
+        if key not in self.files:
             tmp = self.extract(type, key)
-            self.blobs[key] = tmp
-        return self.blobs[key]
+            self.files[key] = tmp
+        return self.files[key]
 
     def cleanup(self):
         pass
@@ -61,7 +61,7 @@ class AssetFactoryBase(object):
         try:
             self.cleanup()
         finally:
-            self.blobs.cleanup()
+            self.files.cleanup()
 
 class AssetFactory(object):
     def __new__(cls, url):
