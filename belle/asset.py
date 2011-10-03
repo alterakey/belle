@@ -19,14 +19,49 @@ class AssetOperator(object):
         self.conn.execute(self.table.update(self.table.c.hash == key, {self.table.c.thumbnail:thumbnail}))
 
 class AssetFactoryBase(object):
+    class BlobCache(object):
+        def __init__(self):
+            self.content = dict()
+
+        def __contains__(self, k):
+            return k in self.content
+
+        def __getitem__(self, k):
+            return self.content[k]
+
+        def __setitem__(self, k, v):
+            self.content[k] = v
+
+        def cleanup(self):
+            import os
+            for name in self.content.itervalues():
+                log.debug((u'removing %s' % name).encode('UTF-8'))
+                os.remove(name)
+            self.content.clear()
+
+    def __init__(self, *args, **kwargs):
+        self.blobs = self.BlobCache()
+
+    def get(self, type, key):
+        if key not in self.blobs:
+            tmp = self.extract(type, key)
+            self.blobs[key] = tmp
+        return self.blobs[key]
+
     def cleanup(self):
+        pass
+
+    def extract(self, type, key):
         pass
     
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.cleanup()
+        try:
+            self.cleanup()
+        finally:
+            self.blobs.cleanup()
 
 class AssetFactory(object):
     def __new__(cls, url):
@@ -36,15 +71,9 @@ class AssetFactory(object):
 
 class SQLAAssetFactory(AssetFactoryBase):
     def __init__(self, url):
+        super(SQLAAssetFactory, self).__init__(url)
         self.engine = sa.create_engine(url)
         self.conn = None
-        self.blobs = dict()
-
-    def get(self, type, key):
-        if key not in self.blobs:
-            tmp = self._extract(type, key)
-            self.blobs[key] = tmp
-        return self.blobs[key]
 
     def connect(self):
         self.conn = self.engine.connect()
@@ -55,12 +84,8 @@ class SQLAAssetFactory(AssetFactoryBase):
         if self.conn:
             self.conn.close()
             self.conn = None
-        for name in self.blobs.itervalues():
-            log.debug((u'removing %s' % name).encode('UTF-8'))
-            os.remove(name)
-        self.blobs = dict()
 
-    def _extract(self, type, key):
+    def extract(self, type, key):
         tmp = tempfile.NamedTemporaryFile(delete=False)
         
         if not self.conn:
@@ -75,23 +100,10 @@ class SQLAAssetFactory(AssetFactoryBase):
 
 class RestAssetFactory(AssetFactoryBase):
     def __init__(self, url):
+        super(RestAssetFactory, self).__init__(url)
         self.prefix = url
-        self.blobs = dict()
 
-    def get(self, type, key):
-        if key not in self.blobs:
-            tmp = self._extract(type, key)
-            self.blobs[key] = tmp
-        return self.blobs[key]
-
-    def cleanup(self):
-        import os
-        for name in self.blobs.itervalues():
-            log.debug((u'removing %s' % name).encode('UTF-8'))
-            os.remove(name)
-        self.blobs = dict()
-
-    def _extract(self, type, key):
+    def extract(self, type, key):
         tmp = tempfile.NamedTemporaryFile(delete=False)
         
         log.debug((u'extracting %s (%s) as %s' % (key, type, tmp.name)).encode('UTF-8'))
