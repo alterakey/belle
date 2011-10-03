@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import tempfile
 import logging
 import cStringIO
+import urllib2
 
 log = logging.getLogger(__name__)
 
@@ -27,7 +28,13 @@ class AssetFactoryBase(object):
     def __exit__(self, exc_type, exc_value, traceback):
         self.cleanup()
 
-class AssetFactory(AssetFactoryBase):
+class AssetFactory(object):
+    def __new__(cls, url):
+        if url.startswith('rest:'):
+            return RestAssetFactory(url[5:])
+        return SQLAAssetFactory(url)
+
+class SQLAAssetFactory(AssetFactoryBase):
     def __init__(self, url):
         self.engine = sa.create_engine(url)
         self.conn = None
@@ -65,6 +72,40 @@ class AssetFactory(AssetFactoryBase):
 
         tmp.close()
         return tmp.name
+
+class RestAssetFactory(AssetFactoryBase):
+    def __init__(self, url):
+        self.prefix = url
+        self.blobs = dict()
+
+    def get(self, type, key):
+        if key not in self.blobs:
+            tmp = self._extract(type, key)
+            self.blobs[key] = tmp
+        return self.blobs[key]
+
+    def cleanup(self):
+        import os
+        for name in self.blobs.itervalues():
+            log.debug((u'removing %s' % name).encode('UTF-8'))
+            os.remove(name)
+        self.blobs = dict()
+
+    def _extract(self, type, key):
+        tmp = tempfile.NamedTemporaryFile(delete=False)
+        
+        log.debug((u'extracting %s (%s) as %s' % (key, type, tmp.name)).encode('UTF-8'))
+
+        req = urllib2.Request(u'%s/%s' % (self.prefix, key))
+        resp = urllib2.urlopen(req)
+        try:
+            tmp.write(resp.read())
+        except AttributeError:
+            raise resp
+
+        tmp.close()
+        return tmp.name
+
 
 class AssetThumbnailGenerator(object):
     def __init__(self, url, x, y):
