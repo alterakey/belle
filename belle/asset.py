@@ -128,7 +128,7 @@ class AssetThumbnailGenerator(object):
     def generate(self, *keys):
         import Image
 
-        with AssetFactory(self.url) as assets:
+        with SQLAAssetFactory(self.url) as assets:
             txn = assets.connect().begin()
             try:
                 for key in keys:
