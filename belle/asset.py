@@ -7,16 +7,11 @@ import urllib2
 log = logging.getLogger(__name__)
 
 class AssetOperator(object):
-    from belle.schema import asset_table as table
-
-    def __init__(self, conn):
-        self.conn = conn
-
     def match(self, key):
-        return self.conn.execute(sa.sql.select([self.table.c.blob], self.table.c.hash == key))
+        pass
 
     def update_thumbnail(self, key, thumbnail):
-        self.conn.execute(self.table.update(self.table.c.hash == key, {self.table.c.thumbnail:thumbnail}))
+        pass
 
 class AssetFactoryBase(object):
     class FileCache(object):
@@ -91,12 +86,29 @@ class SQLAAssetFactory(AssetFactoryBase):
         if not self.conn:
             self.connect()
 
-        for blob, in AssetOperator(self.conn).match(key):
+        for blob, in self.operator.match(key):
             log.debug((u'extracting %s (%s) as %s' % (key, type, tmp.name)).encode('UTF-8'))
             tmp.write(blob)
 
         tmp.close()
         return tmp.name
+
+    @property
+    def operator(self):
+        return self._Operator(self.conn)
+
+    class _Operator(AssetOperator):
+        from belle.schema import asset_table as table
+
+        def __init__(self, conn):
+            self.conn = conn
+
+        def match(self, key):
+            return self.conn.execute(sa.sql.select([self.table.c.blob], self.table.c.hash == key))
+
+        def update_thumbnail(self, key, thumbnail):
+            self.conn.execute(self.table.update(self.table.c.hash == key, {self.table.c.thumbnail:thumbnail}))
+
 
 class RestAssetFactory(AssetFactoryBase):
     def __init__(self, url):
@@ -120,6 +132,34 @@ class RestAssetFactory(AssetFactoryBase):
         tmp.close()
         return tmp.name
 
+    @property
+    def operator(self):
+        return self._Operator(self.prefix)
+
+    class _Operator(AssetOperator):
+        def __init__(self, prefix):
+            self.prefix = self.prefix
+
+        def match(self, key):
+            url = u'%s/%s' % (self.prefix, key)
+            req = urllib2.Request(url)
+            resp = urllib2.urlopen(req)
+            try:
+                return resp.read()
+            except AttributeError:
+                raise resp
+
+        def update_thumbnail(self, key, thumbnail):
+            url = u'%s/%s' % (self.prefix, key)
+            req = urllib2.Request(url, data=thumbnail)
+            req.content_type = 'image/jpeg'
+            req.get_method = lambda: 'PUT'
+            resp = urllib2.urlopen(req)
+            try:
+                return resp.read()
+            except AttributeError:
+                raise resp
+
 
 class AssetThumbnailGenerator(object):
     def __init__(self, url, x, y):
@@ -127,20 +167,25 @@ class AssetThumbnailGenerator(object):
         self.x = x
         self.y = y
 
-    def generate(self, *keys):
+    def _update_thumbnail_for(self, assets, keys):
         import Image
-
-        with SQLAAssetFactory(self.url) as assets:
-            txn = assets.connect().begin()
+        for key in keys:
             try:
-                for key in keys:
-                    try:
-                        src = Image.open(assets.get('image/jpeg', key))
-                    except IOError:
-                        src = Image.new("RGB", (self.x, self.y), (128,128,128))
-                    dest = cStringIO.StringIO()
-                    src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
-                    AssetOperator(assets.conn).update_thumbnail(key, dest)
-                txn.commit()
-            finally:
-                txn.rollback()
+                src = Image.open(assets.get('image/jpeg', key))
+            except IOError:
+                src = Image.new("RGB", (self.x, self.y), (128,128,128))
+                dest = cStringIO.StringIO()
+                src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
+                assets.operator.update_thumbnail(key, dest)
+
+    def generate(self, *keys):
+        with AssetFactory(self.url) as assets:
+            if not isinstance(assets, SQLAAssetFactory):
+                self._update_thumbnail_for(assets, keys)
+            else:
+                txn = assets.connect().begin()
+                try:
+                    self._update_thumbnail_for(assets, keys)
+                    txn.commit()
+                finally:
+                    txn.rollback()
