@@ -106,9 +106,11 @@ class RestAssetFactory(AssetFactoryBase):
     def extract(self, type, key):
         tmp = tempfile.NamedTemporaryFile(delete=False)
         
-        log.debug((u'extracting %s (%s) as %s' % (key, type, tmp.name)).encode('UTF-8'))
+        url = u'%s/%s' % (self.prefix, key)
 
-        req = urllib2.Request(u'%s/%s' % (self.prefix, key))
+        log.debug((u'requesting %s (%s) as %s [%s]' % (key, type, tmp.name, url)).encode('UTF-8'))
+
+        req = urllib2.Request(url)
         resp = urllib2.urlopen(req)
         try:
             tmp.write(resp.read())
