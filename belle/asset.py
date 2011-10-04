@@ -164,6 +164,21 @@ class RestAssetFactory(AssetFactoryBase):
             except AttributeError:
                 raise resp
 
+class ImageThumbnailer(object):
+    def __init__(self, asset_blob, x, y):
+        self.asset_blob = asset_blob
+        self.x = x
+        self.y = y
+
+    def generate(self):
+        import Image
+        try:
+            src = Image.open(self.asset_blob)
+        except IOError:
+            src = Image.new("RGB", (self.x, self.y), (128,128,128))
+        dest = cStringIO.StringIO()
+        src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
+        return dest.getvalue()
 
 class AssetThumbnailGenerator(object):
     def __init__(self, url, label, x, y):
@@ -173,16 +188,8 @@ class AssetThumbnailGenerator(object):
         self.y = y
 
     def _update_thumbnail_for(self, assets, keys):
-        import Image
         for key in keys:
-            try:
-                src = Image.open(assets.get('image/jpeg', key))
-            except IOError:
-                src = Image.new("RGB", (self.x, self.y), (128,128,128))
-            
-            dest = cStringIO.StringIO()
-            src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
-            assets.operator.update_thumbnail(key, self.label, dest.getvalue())
+            assets.operator.update_thumbnail(key, self.label, ImageThumbnailer(assets.get('image/jpeg', key), self.x, self.y).generate())
 
     def generate(self, *keys):
         with AssetFactory(self.url) as assets:
