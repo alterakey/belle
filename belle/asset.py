@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
 import sqlalchemy as sa
 import tempfile
 import logging
 import cStringIO
 import urllib2
+import re
 
 log = logging.getLogger(__name__)
 
@@ -180,6 +182,35 @@ class ImageThumbnailer(object):
         src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
         return dest.getvalue()
 
+class FontThumbnailer(object):
+    def __init__(self, asset_blob, x, y):
+        self.asset_blob = asset_blob
+        self.x = x
+        self.y = y
+
+    def generate(self):
+        face = self.asset_blob
+        src = Image.new("L", (self.x, self.y), 255)
+
+        self._typeset(src, face, u'テスト')
+
+        dest = cStringIO.StringIO()
+        src.convert("RGB").save(dest, format="JPEG")
+        return dest.getvalue()
+
+    def _typeset(self, im, face, text):
+        from belle.glyph import Character, GlyphWriter, NormalMapping
+        for ch in text:
+            char = Character(char=ch,
+                             x=0.0,
+                             y=0.0,
+                             width=16.0,
+                             height=16.0,
+                             rotation=0.0,
+                             face=face,
+                             color=(0,0,0))
+            GlyphWriter(char).write(im, mapping=NormalMapping)
+
 class AssetThumbnailGenerator(object):
     def __init__(self, url, label, x, y):
         self.url = url
@@ -189,7 +220,10 @@ class AssetThumbnailGenerator(object):
 
     def _update_thumbnail_for(self, assets, keys):
         for key in keys:
-            assets.operator.update_thumbnail(key, self.label, ImageThumbnailer(assets.get('image/jpeg', key), self.x, self.y).generate())
+            if re.search(u'(ttf|ttc|otf)$', key):
+                assets.operator.update_thumbnail(key, self.label, FontThumbnailer(assets.get(None, key), self.x, self.y).generate())
+            else:
+                assets.operator.update_thumbnail(key, self.label, ImageThumbnailer(assets.get(None, key), self.x, self.y).generate())
 
     def generate(self, *keys):
         with AssetFactory(self.url) as assets:
