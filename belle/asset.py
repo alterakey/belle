@@ -179,9 +179,10 @@ class AssetThumbnailGenerator(object):
                 src = Image.open(assets.get('image/jpeg', key))
             except IOError:
                 src = Image.new("RGB", (self.x, self.y), (128,128,128))
-                dest = cStringIO.StringIO()
-                src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
-                assets.operator.update_thumbnail(key, self.label, dest.getvalue())
+            
+            dest = cStringIO.StringIO()
+            src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
+            assets.operator.update_thumbnail(key, self.label, dest.getvalue())
 
     def generate(self, *keys):
         with AssetFactory(self.url) as assets:
