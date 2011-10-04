@@ -37,5 +37,6 @@ setup(
     zip_safe=False,
     test_suite='nose.collector',
     tests_require=['nose'],
+    scripts=['belle/script/render.py'],
     entry_points="""""",
 )
