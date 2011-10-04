@@ -10,7 +10,7 @@ class AssetOperator(object):
     def match(self, key):
         pass
 
-    def update_thumbnail(self, key, thumbnail):
+    def update_thumbnail(self, key, label, thumbnail):
         pass
 
 class AssetFactoryBase(object):
@@ -98,16 +98,20 @@ class SQLAAssetFactory(AssetFactoryBase):
         return self._Operator(self.conn)
 
     class _Operator(AssetOperator):
-        from belle.schema import asset_table as table
-
         def __init__(self, conn):
             self.conn = conn
+            self.setup()
+
+        def setup(self):
+            metadata = sa.MetaData()
+            metadata.reflect(bind=self.conn)
+            self.table = metadata.tables['asset']
 
         def match(self, key):
             return self.conn.execute(sa.sql.select([self.table.c.blob], self.table.c.hash == key))
 
-        def update_thumbnail(self, key, thumbnail):
-            self.conn.execute(self.table.update(self.table.c.hash == key, {self.table.c.thumbnail:thumbnail}))
+        def update_thumbnail(self, key, label, thumbnail):
+            self.conn.execute(self.table.update(self.table.c.hash == key, {getattr(self.table.c, 'thumbnail_%s' % label):thumbnail}))
 
 
 class RestAssetFactory(AssetFactoryBase):
@@ -149,8 +153,8 @@ class RestAssetFactory(AssetFactoryBase):
             except AttributeError:
                 raise resp
 
-        def update_thumbnail(self, key, thumbnail):
-            url = u'%s/%s' % (self.prefix, key)
+        def update_thumbnail(self, key, label, thumbnail):
+            url = u'%s/thumbnail/%s/%s' % (self.prefix, label, key)
             req = urllib2.Request(url, data=thumbnail)
             req.content_type = 'image/jpeg'
             req.get_method = lambda: 'PUT'
@@ -162,8 +166,9 @@ class RestAssetFactory(AssetFactoryBase):
 
 
 class AssetThumbnailGenerator(object):
-    def __init__(self, url, x, y):
+    def __init__(self, url, label, x, y):
         self.url = url
+        self.label = label
         self.x = x
         self.y = y
 
@@ -176,7 +181,7 @@ class AssetThumbnailGenerator(object):
                 src = Image.new("RGB", (self.x, self.y), (128,128,128))
                 dest = cStringIO.StringIO()
                 src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
-                assets.operator.update_thumbnail(key, dest)
+                assets.operator.update_thumbnail(key, self.label, dest.getvalue())
 
     def generate(self, *keys):
         with AssetFactory(self.url) as assets:
