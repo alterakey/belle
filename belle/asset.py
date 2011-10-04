@@ -120,7 +120,7 @@ class SQLAAssetFactory(AssetFactoryBase):
             return self.conn.execute(sa.sql.select([self.table.c.blob, self.table.c.type], self.table.c.hash == key))
 
         def update_thumbnail(self, key, label, thumbnail):
-            self.conn.execute(self.table.update(self.table.c.hash == key, {getattr(self.table.c, 'thumbnail_%s' % label):thumbnail}))
+            self.conn.execute(self.table.update(self.table.c.hash == key, {getattr(self.table.c, 'thumbnail_%s' % label):buffer(thumbnail)}))
 
 
 class RestAssetFactory(AssetFactoryBase):
