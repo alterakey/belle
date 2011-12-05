@@ -151,7 +151,7 @@ class RestAssetFactory(AssetFactoryBase):
 
     class _Operator(AssetOperator):
         def __init__(self, prefix):
-            self.prefix = self.prefix
+            self.prefix = prefix
 
         def match(self, key):
             url = u'%s/%s' % (self.prefix, key)
