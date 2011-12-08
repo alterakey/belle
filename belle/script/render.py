@@ -1,4 +1,4 @@
-def render(asset_url):
+def render(asset_url, paper_width=None, paper_height=None):
     import sys
     import xml.etree.ElementTree as ET
     import Image, ImageDraw
@@ -10,8 +10,11 @@ def render(asset_url):
 
     root = ET.XML(sys.stdin.read())
 
-    paper_width = int(root.attrib['width'])
-    paper_height = int(root.attrib['height'])
+    if paper_width is None:
+        paper_width = int(root.attrib['width'])
+    if paper_height is None:
+        paper_height = int(root.attrib['height'])
+
     im = Image.new('RGBA', (paper_width, paper_height), (255,255,255,255))
     draw = ImageDraw.Draw(im)
 
@@ -56,6 +59,8 @@ if __name__ == '__main__':
     mode = sys.argv[1]
     if mode == 'render':
         render(sys.argv[2])
+    elif mode == 'render-thumbnail':
+        render(sys.argv[2], paper_width=int(sys.argv[3]), paper_height=int(sys.argv[4]))
     elif mode == 'generate-thumbnail':
         generate_thumbnail(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6])
     else:
