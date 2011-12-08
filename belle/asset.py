@@ -166,9 +166,9 @@ class ImageThumbnailer(object):
         try:
             src = Image.open(self.asset_blob)
         except IOError:
-            src = Image.new("RGB", (self.x, self.y), (128,128,128))
+            src = Image.new("RGBA", (self.x, self.y), (128,128,128))
         dest = cStringIO.StringIO()
-        src.resize((self.x, self.y), Image.ANTIALIAS).convert("RGB").save(dest, format="JPEG")
+        src.resize((self.x, self.y), Image.ANTIALIAS).save(dest, format="PNG")
         return dest.getvalue()
 
 class FontThumbnailer(object):
@@ -185,7 +185,7 @@ class FontThumbnailer(object):
         self._typeset(src, face, u'テスト')
 
         dest = cStringIO.StringIO()
-        src.convert("RGB").save(dest, format="JPEG")
+        src.convert("RGBA").save(dest, format="PNG")
         return dest.getvalue()
 
     def _typeset(self, im, face, text):

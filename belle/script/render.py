@@ -43,7 +43,7 @@ def render(asset_url, paper_width=None, paper_height=None):
                                  tate=(char_.attrib.get('tate') is not None))
                 GlyphWriter(char).write(im, mapping=NormalMapping)
                 
-    im.convert('RGB').save(sys.stdout, format="JPEG")
+    im.save(sys.stdout, format="PNG")
 
 def generate_thumbnail(asset_url, asset_id, x, y):
     from belle.asset import AssetThumbnailGenerator
