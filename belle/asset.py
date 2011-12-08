@@ -17,9 +17,6 @@ class AssetOperator(object):
     def match(self, key):
         pass
 
-    def update_thumbnail(self, key, label, thumbnail):
-        pass
-
 class AssetFactoryBase(object):
     class FileCache(object):
         def __init__(self):
@@ -119,10 +116,6 @@ class SQLAAssetFactory(AssetFactoryBase):
         def match(self, key):
             return self.conn.execute(sa.sql.select([self.table.c.blob, self.table.c.type], self.table.c.hash == key))
 
-        def update_thumbnail(self, key, label, thumbnail):
-            self.conn.execute(self.table.update(self.table.c.hash == key, {getattr(self.table.c, 'thumbnail_%s' % label):buffer(thumbnail)}))
-
-
 class RestAssetFactory(AssetFactoryBase):
     def __init__(self, url):
         super(RestAssetFactory, self).__init__(url)
@@ -159,17 +152,6 @@ class RestAssetFactory(AssetFactoryBase):
             resp = urllib2.urlopen(req)
             try:
                 return resp.read(), resp.info()['Content-Type']
-            except AttributeError:
-                raise resp
-
-        def update_thumbnail(self, key, label, thumbnail):
-            url = u'%s/thumbnail/%s/%s' % (self.prefix, label, key)
-            req = urllib2.Request(url, data=thumbnail)
-            req.content_type = 'image/jpeg'
-            req.get_method = lambda: 'PUT'
-            resp = urllib2.urlopen(req)
-            try:
-                return resp.read()
             except AttributeError:
                 raise resp
 
@@ -219,29 +201,17 @@ class FontThumbnailer(object):
                              color=(0,0,0))
             GlyphWriter(char).write(im, mapping=NormalMapping)
 
+
 class AssetThumbnailGenerator(object):
-    def __init__(self, url, label, x, y):
+    def __init__(self, url, x, y):
         self.url = url
-        self.label = label
         self.x = x
         self.y = y
 
-    def _update_thumbnail_for(self, assets, keys):
-        for key in keys:
+    def generate(self, key):
+        with AssetFactory(self.url) as assets:
             asset = assets.get(None, key)
             if re.search(u'^(font|ttf|ttc|otf)$', asset.type):
-                assets.operator.update_thumbnail(key, self.label, FontThumbnailer(asset.filename, self.x, self.y).generate())
+                return FontThumbnailer(asset.filename, self.x, self.y).generate()
             else:
-                assets.operator.update_thumbnail(key, self.label, ImageThumbnailer(asset.filename, self.x, self.y).generate())
-
-    def generate(self, *keys):
-        with AssetFactory(self.url) as assets:
-            if not isinstance(assets, SQLAAssetFactory):
-                self._update_thumbnail_for(assets, keys)
-            else:
-                txn = assets.connect().begin()
-                try:
-                    self._update_thumbnail_for(assets, keys)
-                    txn.commit()
-                finally:
-                    txn.rollback()
+                return ImageThumbnailer(asset.filename, self.x, self.y).generate()
