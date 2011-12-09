@@ -10,11 +10,24 @@ def render(asset_url, paper_width=None, paper_height=None):
 
     root = ET.XML(sys.stdin.read())
 
-    if paper_width is None:
-        paper_width = int(root.attrib['width'])
-    if paper_height is None:
-        paper_height = int(root.attrib['height'])
+    try:
+        native_width = int(root.attrib['width'])
+        native_height = int(root.attrib['height'])
+    except KeyError:
+        native_width = paper_width
+        native_height = paper_height
 
+    if paper_width is None:
+        paper_width = native_width
+    if paper_height is None:
+        paper_height = native_height
+
+    if (paper_width, paper_height) != (native_width, native_height):
+        if native_width > native_height:
+            paper_height = native_height * (paper_width / native_width)
+        else:
+            paper_width = native_width * (paper_height / native_height)
+            
     im = Image.new('RGBA', (paper_width, paper_height), (255,255,255,255))
     draw = ImageDraw.Draw(im)
 
