@@ -77,7 +77,7 @@ class Character(object):
         self.width = width
         self.height = height
         self.rotation = rotation
-        self.face = face
+        self.face = face.filename
         self.color = color
         self.outline_color = outline_color
         self.outline_width = outline_width

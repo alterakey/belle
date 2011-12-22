@@ -8,7 +8,7 @@ import Image, ImageDraw
 
 class Img(object):
     def __init__(self, src=None, x=None, y=None, width=None, height=None, rotation=None):
-        self.src = src
+        self.src = src.filename
         self.x = x
         self.y = y
         self.width = width
