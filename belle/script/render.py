@@ -28,6 +28,9 @@ def render(asset_url, paper_width=None, paper_height=None):
         else:
             paper_width = native_width * (paper_height / float(native_height))
 
+    paper_width = int(paper_width)
+    paper_height = int(paper_height)
+            
     im = Image.new('RGBA', (paper_width, paper_height), (255,255,255,255))
     draw = ImageDraw.Draw(im)
 
