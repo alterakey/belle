@@ -21,6 +21,8 @@ class FT2Bitmap(object):
         return Image.frombuffer("L", (self.bitmap.width, self.bitmap.rows), data, "raw", "L", abs(self.bitmap.pitch), 1)
 
 class GlyphWriter(object):
+    OVERRENDER_RATIO = 1.5
+
     def __init__(self, char):
         self.char = char
         
@@ -39,20 +41,13 @@ class GlyphWriter(object):
             outline_mask = self._write_glyph(self._load_glyph_outline())
             size = map(max, size, outline_mask.size)
 
-        out = Image.new("RGBA", size, (0,0,0,0))
+        out = Image.new("RGBA", [int(x * self.OVERRENDER_RATIO) for x in size], (0,0,0,0))
         draw = ImageDraw.Draw(out)
 
         if self.char.is_outlined():
             draw.bitmap((0, 0), outline_mask, self.char.outline_color)
         if self.char.is_filled():
             draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
-
-        if not self.char.tate:
-            if self.char.width < size[0]:
-                out = out.resize((self.char.width, size[1]))
-        else:
-            if self.char.height < size[1]:
-                out = out.resize((size[0], self.char.height))
 
         if self.char.rotation:
             out = out.rotate(-self.char.rotation, expand=1)
