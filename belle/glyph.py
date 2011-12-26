@@ -46,6 +46,14 @@ class GlyphWriter(object):
             draw.bitmap((0, 0), outline_mask, self.char.outline_color)
         if self.char.is_filled():
             draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
+
+        if not self.char.tate:
+            if self.char.width < size[0]:
+                out = out.resize((self.char.width, size[1]))
+        else:
+            if self.char.height < size[1]:
+                out = out.resize((size[0], self.char.height))
+
         if self.char.rotation:
             out = out.rotate(-self.char.rotation, expand=1)
         return out
