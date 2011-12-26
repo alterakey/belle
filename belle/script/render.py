@@ -24,10 +24,10 @@ def render(asset_url, paper_width=None, paper_height=None):
 
     if (paper_width, paper_height) != (native_width, native_height):
         if native_width > native_height:
-            paper_height = native_height * (paper_width / native_width)
+            paper_height = native_height * (paper_width / float(native_width))
         else:
-            paper_width = native_width * (paper_height / native_height)
-            
+            paper_width = native_width * (paper_height / float(native_height))
+
     im = Image.new('RGBA', (paper_width, paper_height), (255,255,255,255))
     draw = ImageDraw.Draw(im)
 
