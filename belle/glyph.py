@@ -18,7 +18,7 @@ class FT2Bitmap(object):
 
     def to_pil_image(self):
         data = ''.join([struct.pack('B', c) for c in self.bitmap.buffer])
-        return Image.frombuffer("L", (self.bitmap.width, self.bitmap.rows), data, "raw", "L", 0, 1)
+        return Image.frombuffer("L", (self.bitmap.width, self.bitmap.rows), data, "raw", "L", abs(self.bitmap.pitch), 1)
 
 class GlyphWriter(object):
     def __init__(self, char):
