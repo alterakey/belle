@@ -56,8 +56,9 @@ def render(asset_url, paper_width=None, paper_height=None):
                                  color=HTMLColorParser(char_.attrib.get('color')).rgba(),
                                  outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
                                  outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
-                                 tate=(char_.attrib.get('tate') is not None))
-                GlyphWriter(char).write(im, mapping=NormalMapping)
+                                 tate=(char_.attrib.get('tate') is not None),
+                                 pivot=char_.attrib.get('pivot'))
+                GlyphWriter(char).write(im)
                 
     im.save(sys.stdout, format="PNG")
 

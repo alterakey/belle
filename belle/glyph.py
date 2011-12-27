@@ -28,7 +28,10 @@ class GlyphWriter(object):
         
     def write(self, to, mapping=None):
         if mapping is None:
-            mapping = NormalMapping
+            if self.char.pivot == 'center':
+                mapping = NormalMapping
+            else:
+                mapping = LeftTopMapping
         glyph_ = self._composite(self._load_glyph(), self._load_glyph_outline())
         to.paste(glyph_, mapping(self.char.height).map(self.char, glyph_), glyph_)
 
@@ -73,7 +76,7 @@ class GlyphWriter(object):
         return FT2Bitmap(bitmap).to_pil_image()
 
 class Character(object):
-    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None, tate=False):
+    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None, tate=False, pivot=None):
         self.char = char
         self.x = x
         self.y = y
@@ -85,6 +88,7 @@ class Character(object):
         self.outline_color = outline_color
         self.outline_width = outline_width
         self.tate = tate
+        self.pivot = pivot
         self._left = 0
         self._top = 0
         self._width = 0
@@ -115,7 +119,7 @@ class Character(object):
         else:
             return YokogakiGlyphPolicy(self.char)
 
-class NormalMapping(object):
+class LeftTopMapping(object):
     def __init__(self, glyph_size):
         self.glyph_size = glyph_size
 
@@ -134,8 +138,16 @@ class NormalMapping(object):
             else:
                 x = self.glyph_size - w
 
-        return (char.x + x - self.glyph_size / 2, char.y + y - self.glyph_size / 2)
-            
+        return (char.x + x, char.y + y)
+
+class NormalMapping(object):
+    def __init__(self, glyph_size):
+        self.basemap = LeftTopMapping(glyph_size)
+
+    def map(self, char, glyph):
+        mapping = self.basemap.map(char, glyph)
+        return (mapping[0] - self.basemap.glyph_size / 2, mapping[1] - self.basemap.glyph_size / 2)
+
 class YokogakiGlyphPolicy(object):
     def __init__(self, char):
         pass
