@@ -60,6 +60,7 @@ class GlyphWriter(object):
         face = freetype.Face(self.char.face, index=self.char.index)
         face.set_char_size(int(self.char.height * 64))
         face.load_char(self.char.char, freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP)
+        self.char.set_metrics(face)
         return face.glyph.get_glyph()
 
     def _load_glyph_outline(self):
@@ -94,6 +95,7 @@ class Character(object):
         self._top = 0
         self._width = 0
         self._height = 0
+        self._metrics = None
 
         if not self.outline_width > 0.0:
             self.outline_width = None
@@ -106,6 +108,13 @@ class Character(object):
 
     def get_bitmap_geom(self):
         return (self._left, self._top, self._width, self._height)
+
+    def get_metrics(self):
+        return self._metrics
+
+    def set_metrics(self, face):
+        metrics = face.glyph._FT_GlyphSlot.contents.metrics
+        self._metrics = dict(height=metrics.height, horiBearingY=metrics.horiBearingY, ascender=face.ascender*face.size.x_scale / 65536.0, descender=face.descender*face.size.y_scale / 65536.0)
 
     def is_outlined(self):
         return self.outline_color is not None and self.outline_width is not None
@@ -121,11 +130,14 @@ class Character(object):
             return YokogakiGlyphPolicy(self.char)
 
 class LeftTopMapping(object):
+    TATE_NAKA_YOKO_BASELINE_ADJ = 0.5
+
     def __init__(self, glyph_size):
         self.glyph_size = glyph_size
 
     def map(self, char, glyph):
         x, y, w, h = char.get_bitmap_geom()
+        metrics = char.get_metrics()
         if not char.policy.should_transpose:
             y += self.glyph_size
         else:
@@ -135,7 +147,10 @@ class LeftTopMapping(object):
                 if char.policy.should_realign_to_center:
                     x = -h / 2 + self.glyph_size / 2
                 else:
-                    x = -x - h
+                    gdsc = (metrics['height'] - metrics['horiBearingY']) / 64.0
+                    dsc = metrics['descender'] / 64.0
+                    adj = -(dsc + gdsc)
+                    x = adj + dsc * self.TATE_NAKA_YOKO_BASELINE_ADJ
             else:
                 x = self.glyph_size - w
 

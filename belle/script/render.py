@@ -46,7 +46,10 @@ def render(asset_url, paper_width=None, paper_height=None):
                 ImgWriter(img).write(im)
                 
             for char_ in layer.findall('char'):
-                char = Character(char=char_.text,
+                text = char_.text
+                if not isinstance(text, unicode) and isinstance(text, str):
+                    text = text.decode('UTF-8', 'replace')
+                char = Character(char=text,
                                  x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
                                  y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
                                  width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
