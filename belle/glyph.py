@@ -57,7 +57,7 @@ class GlyphWriter(object):
         return out
         
     def _load_glyph(self):
-        face = freetype.Face(self.char.face)
+        face = freetype.Face(self.char.face, index=self.char.index)
         face.set_char_size(int(self.char.height * 64))
         face.load_char(self.char.char, freetype.FT_LOAD_DEFAULT | freetype.FT_LOAD_NO_BITMAP)
         return face.glyph.get_glyph()
@@ -76,7 +76,7 @@ class GlyphWriter(object):
         return FT2Bitmap(bitmap).to_pil_image()
 
 class Character(object):
-    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None, tate=False, pivot=None):
+    def __init__(self, char=None, x=None, y=None, width=None, height=None, rotation=None, face=None, color=None, outline_color=None, outline_width=None, tate=False, pivot=None, index=0):
         self.char = char
         self.x = x
         self.y = y
@@ -84,6 +84,7 @@ class Character(object):
         self.height = height
         self.rotation = rotation
         self.face = face.filename
+        self.index = index
         self.color = color
         self.outline_color = outline_color
         self.outline_width = outline_width

@@ -57,7 +57,8 @@ def render(asset_url, paper_width=None, paper_height=None):
                                  outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
                                  outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
                                  tate=(char_.attrib.get('tate') is not None),
-                                 pivot=char_.attrib.get('pivot'))
+                                 pivot=char_.attrib.get('pivot'),
+                                 index=char_.attrib.get('index', 0))
                 GlyphWriter(char).write(im)
                 
     im.save(sys.stdout, format="PNG")
