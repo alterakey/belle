@@ -21,7 +21,7 @@ class FT2Bitmap(object):
         return Image.frombuffer("L", (self.bitmap.width, self.bitmap.rows), data, "raw", "L", abs(self.bitmap.pitch), 1)
 
 class GlyphWriter(object):
-    OVERRENDER_RATIO = 1.5
+    OVERRENDER_RATIO = 1.1
 
     def __init__(self, char):
         self.char = char
