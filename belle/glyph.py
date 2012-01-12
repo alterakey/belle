@@ -33,7 +33,8 @@ class GlyphWriter(object):
             else:
                 mapping = LeftTopMapping
         glyph_ = self._composite(self._load_glyph(), self._load_glyph_outline())
-        to.paste(glyph_, mapping(self.char.height).map(self.char, glyph_), glyph_)
+        coord = tuple([int(t) for t in mapping(self.char.height).map(self.char, glyph_)])
+        to.paste(glyph_, coord, glyph_)
 
     def _composite(self, fill_glyph, outline_glyph):
         size = (1, 1)
