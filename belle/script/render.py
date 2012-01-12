@@ -54,7 +54,7 @@ def render(asset_url, paper_width=None, paper_height=None):
                                  y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
                                  width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
                                  height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
-                                 rotation=float(char_.attrib.get('rotation', 0)),
+                                 rotation=float(char_.attrib.get('rotate', 0)),
                                  face=assets.get('font', char_.attrib.get('face', u'')),
                                  color=HTMLColorParser(char_.attrib.get('color')).rgba(),
                                  outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
