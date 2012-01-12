@@ -2,6 +2,7 @@
 from __future__ import print_function
 
 import logging
+import math
 import re
 import struct
 import sys
@@ -32,12 +33,13 @@ class GlyphWriter(object):
                 mapping = NormalMapping
             else:
                 mapping = LeftTopMapping
-        glyph_ = self._composite(self._load_glyph(), self._load_glyph_outline())
-        coord = tuple([int(t) for t in mapping(self.char.height).map(self.char, glyph_)])
-        to.paste(glyph_, coord, glyph_)
+        glyph_, offset = self._composite(self._load_glyph(), self._load_glyph_outline())
+        coord = [int(t) for t in mapping(self.char.height).map(self.char, glyph_)]
+        to.paste(glyph_, (coord[0] + offset[0], coord[1] + offset[1]), glyph_)
 
     def _composite(self, fill_glyph, outline_glyph):
         size = (1, 1)
+        offset = (0, 0)
         if self.char.is_filled():
             fill_mask = self._write_glyph(self._load_glyph())
             size = map(max, size, fill_mask.size)
@@ -54,8 +56,13 @@ class GlyphWriter(object):
             draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
 
         if self.char.rotation:
+            theta = self.char.rotation * 180 / math.pi
+            v = (out.size[0] / 2 * (1 / self.OVERRENDER_RATIO - 1), 
+                 out.size[1] / 2 * (1 / self.OVERRENDER_RATIO - 1))
+            offset = (v[0] * math.cos(theta) - v[1] * math.sin(theta),
+                      v[0] * math.sin(theta) + v[1] * math.cos(theta))
             out = out.rotate(-self.char.rotation, expand=1)
-        return out
+        return out, offset
         
     def _load_glyph(self):
         face = freetype.Face(self.char.face, index=self.char.index)
