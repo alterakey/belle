@@ -8,6 +8,17 @@ import re
 
 log = logging.getLogger(__name__)
 
+class AssetNotFoundError(Exception):
+    def __init__(self, key):
+        self.key = key
+
+    def __unicode__(self):
+        return u'asset not found: %s' % self.key
+
+    def __str__(self):
+        return self.__unicode__().encode('UTF-8')
+
+
 class Asset(object):
     def __init__(self, filename=None, type=None, referral=False):
         self.filename = filename
@@ -90,18 +101,20 @@ class SQLAAssetFactory(AssetFactoryBase):
 
     def extract(self, type, key):
         tmp = tempfile.NamedTemporaryFile(delete=False)
-        tmp_type = None
+        try:
+            tmp_type = None
 
-        if not self.conn:
-            self.connect()
+            if not self.conn:
+                self.connect()
 
-        for blob,type in self.operator.match(key):
-            log.debug((u'extracting %s (%s) as %s' % (key, type, tmp.name)).encode('UTF-8'))
-            tmp.write(blob)
-            tmp_type = type
+            for blob,type in self.operator.match(key):
+                log.debug((u'extracting %s (%s) as %s' % (key, type, tmp.name)).encode('UTF-8'))
+                tmp.write(blob)
+                return Asset(filename=tmp.name, type=type)
 
-        tmp.close()
-        return Asset(filename=tmp.name, type=tmp_type)
+            raise AssetNotFoundError(key)
+        finally:
+            tmp.close()
 
     @property
     def operator(self):
@@ -127,20 +140,21 @@ class RestAssetFactory(AssetFactoryBase):
 
     def extract(self, type, key):
         tmp = tempfile.NamedTemporaryFile(delete=False)
-        
-        url = u'%s/%s' % (self.prefix, key)
-
-        log.debug((u'requesting %s (%s) as %s [%s]' % (key, type, tmp.name, url)).encode('UTF-8'))
-
-        req = urllib2.Request(url)
-        resp = urllib2.urlopen(req)
         try:
-            tmp.write(resp.read())
-        except AttributeError:
-            raise resp
+            url = u'%s/%s' % (self.prefix, key)
 
-        tmp.close()
-        return Asset(filename=tmp.name, type=resp.info()['Content-Type'])
+            log.debug((u'requesting %s (%s) as %s [%s]' % (key, type, tmp.name, url)).encode('UTF-8'))
+
+            req = urllib2.Request(url)
+            resp = urllib2.urlopen(req)
+            try:
+                tmp.write(resp.read())
+            except AttributeError:
+                raise resp
+            
+            return Asset(filename=tmp.name, type=resp.info()['Content-Type'])
+        finally:
+            tmp.close()
 
     @property
     def operator(self):
@@ -191,7 +205,7 @@ class AmberAssetFactory(AssetFactoryBase):
             log.debug((u'Referring %s (%s) as %s' % (key, type, path)).encode('UTF-8'))
             return Asset(filename=path.encode(self.config.get('app:main', 'amber.store.encoding')), type=type, referral=True)
 
-        return None
+        raise AssetNotFoundError(key)
     
     @property
     def operator(self):

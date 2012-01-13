@@ -1,9 +1,13 @@
+import logging
+
+log = logging.getLogger(__name__)
+    
 def render(asset_url, paper_width=None, paper_height=None):
     import sys
     import xml.etree.ElementTree as ET
     import Image, ImageDraw
 
-    from belle.asset import AssetFactory
+    from belle.asset import AssetFactory, AssetNotFoundError
     from belle.glyph import Character, GlyphWriter, NormalMapping
     from belle.tools import HTMLColorParser, PixelCoords
     from belle.image import Img, ImgWriter
@@ -36,33 +40,36 @@ def render(asset_url, paper_width=None, paper_height=None):
 
     for layer in root.findall('layer'):
         with AssetFactory(asset_url) as assets:
-            for img_ in layer.findall('image'):
-                img = Img(src=assets.get('image', img_.attrib['src']),
-                          x=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('x', 0))),
-                          y=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('y', 0))),
-                          width=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('width', 0))),
-                          height=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('height', 0))),
-                          rotation=float(img_.attrib.get('rotation', 0)))
-                ImgWriter(img).write(im)
+            try:
+                for img_ in layer.findall('image'):
+                    img = Img(src=assets.get('image', img_.attrib['src']),
+                              x=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('x', 0))),
+                              y=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('y', 0))),
+                              width=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('width', 0))),
+                              height=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('height', 0))),
+                              rotation=float(img_.attrib.get('rotation', 0)))
+                    ImgWriter(img).write(im)
                 
-            for char_ in layer.findall('char'):
-                text = char_.text
-                if not isinstance(text, unicode) and isinstance(text, str):
-                    text = text.decode('UTF-8', 'replace')
-                char = Character(char=text,
-                                 x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
-                                 y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
-                                 width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
-                                 height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
-                                 rotation=float(char_.attrib.get('rotate', 0)),
-                                 face=assets.get('font', char_.attrib.get('face', u'')),
-                                 color=HTMLColorParser(char_.attrib.get('color')).rgba(),
-                                 outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
-                                 outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
-                                 tate=(char_.attrib.get('tate') is not None),
-                                 pivot=char_.attrib.get('pivot'),
-                                 index=char_.attrib.get('index', 0))
-                GlyphWriter(char).write(im)
+                for char_ in layer.findall('char'):
+                    text = char_.text
+                    if not isinstance(text, unicode) and isinstance(text, str):
+                        text = text.decode('UTF-8', 'replace')
+                    char = Character(char=text,
+                                     x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
+                                     y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
+                                     width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
+                                     height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
+                                     rotation=float(char_.attrib.get('rotate', 0)),
+                                     face=assets.get('font', char_.attrib.get('face', u'')),
+                                     color=HTMLColorParser(char_.attrib.get('color')).rgba(),
+                                     outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
+                                     outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
+                                     tate=(char_.attrib.get('tate') is not None),
+                                     pivot=char_.attrib.get('pivot'),
+                                     index=char_.attrib.get('index', 0))
+                    GlyphWriter(char).write(im)
+            except AssetNotFoundError, e:
+                log.warn(str(e))
                 
     im.save(sys.stdout, format="PNG")
 
@@ -74,7 +81,6 @@ def generate_thumbnail(asset_url, asset_id, x, y):
 
 if __name__ == '__main__':
     import sys
-    import logging
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     
     mode = sys.argv[1]
