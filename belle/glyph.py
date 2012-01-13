@@ -34,8 +34,8 @@ class GlyphWriter(object):
             else:
                 mapping = LeftTopMapping
         glyph_, offset = self._composite(self._load_glyph(), self._load_glyph_outline())
-        coord = [int(t) for t in mapping(self.char.height).map(self.char, glyph_)]
-        to.paste(glyph_, (coord[0] + offset[0], coord[1] + offset[1]), glyph_)
+        coord = mapping(self.char.height).map(self.char, glyph_)
+        to.paste(glyph_, (int(coord[0] + offset[0]), int(coord[1] + offset[1])), glyph_)
 
     def _composite(self, fill_glyph, outline_glyph):
         size = (1, 1)
