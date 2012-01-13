@@ -189,7 +189,7 @@ class AmberAssetFactory(AssetFactoryBase):
                 path = u'%s/%s.bin' % (self.config.get('app:main', 'amber.store'), key)
                 path = path.replace(u'//', u'/')
             log.debug((u'Referring %s (%s) as %s' % (key, type, path)).encode('UTF-8'))
-            return Asset(filename=path, type=type, referral=True)
+            return Asset(filename=path.encode(self.config.get('app:main', 'amber.store.encoding')), type=type, referral=True)
 
         return None
     
