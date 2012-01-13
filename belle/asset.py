@@ -9,9 +9,10 @@ import re
 log = logging.getLogger(__name__)
 
 class Asset(object):
-    def __init__(self, filename=None, type=None):
+    def __init__(self, filename=None, type=None, referral=False):
         self.filename = filename
         self.type = type
+        self.referral = referral
 
 class AssetOperator(object):
     def match(self, key):
@@ -34,8 +35,9 @@ class AssetFactoryBase(object):
         def cleanup(self):
             import os
             for asset in self.content.itervalues():
-                log.debug((u'removing %s' % asset.filename).encode('UTF-8'))
-                os.remove(asset.filename)
+                if not asset.referral:
+                    log.debug((u'removing %s' % asset.filename).encode('UTF-8'))
+                    os.remove(asset.filename)
             self.content.clear()
 
     def __init__(self, *args, **kwargs):
@@ -66,6 +68,8 @@ class AssetFactory(object):
     def __new__(cls, url):
         if url.startswith('rest:'):
             return RestAssetFactory(url[5:])
+        if url.startswith('amber:'):
+            return AmberAssetFactory(url[6:])
         return SQLAAssetFactory(url)
 
 class SQLAAssetFactory(AssetFactoryBase):
@@ -154,6 +158,58 @@ class RestAssetFactory(AssetFactoryBase):
                 return resp.read(), resp.info()['Content-Type']
             except AttributeError:
                 raise resp
+
+class AmberAssetFactory(AssetFactoryBase):
+    def __init__(self, url):
+        super(AmberAssetFactory, self).__init__(url)
+
+        import ConfigParser
+        self.config = ConfigParser.SafeConfigParser()
+        self.config.read(url)
+
+        self.engine = sa.create_engine(self.config.get('app:main', 'sqlalchemy.url'))
+        self.conn = None
+
+    def connect(self):
+        self.conn = self.engine.connect()
+        return self.conn
+
+    def cleanup(self):
+        import os
+        if self.conn:
+            self.conn.close()
+            self.conn = None
+
+    def extract(self, type, key):
+        if not self.conn:
+            self.connect()
+
+        for path,type in self.operator.match(key):
+            if path is None:
+                path = u'%s/%s.bin' % (self.config.get('app:main', 'amber.store'), key)
+                path = path.replace(u'//', u'/')
+            log.debug((u'Referring %s (%s) as %s' % (key, type, path)).encode('UTF-8'))
+            return Asset(filename=path, type=type, referral=True)
+
+        return None
+    
+    @property
+    def operator(self):
+        return self._Operator(self.conn)
+
+    class _Operator(AssetOperator):
+        def __init__(self, conn):
+            self.conn = conn
+            self.setup()
+
+        def setup(self):
+            metadata = sa.MetaData()
+            metadata.reflect(bind=self.conn)
+            self.table = metadata.tables['asset']
+
+        def match(self, key):
+            return self.conn.execute(sa.sql.select([self.table.c.path, self.table.c.type], self.table.c.hash == key))
+
 
 class ImageThumbnailer(object):
     def __init__(self, asset_blob, x, y):
