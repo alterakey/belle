@@ -1,11 +1,11 @@
 import logging
+import Image, ImageDraw
 
 log = logging.getLogger(__name__)
-    
-def render(asset_url, paper_width=None, paper_height=None):
+
+def _render(asset_url, paper_width=None, paper_height=None):
     import sys
     import xml.etree.ElementTree as ET
-    import Image, ImageDraw
 
     from belle.asset import AssetFactory, AssetNotFoundError
     from belle.glyph import Character, GlyphWriter, NormalMapping
@@ -34,7 +34,7 @@ def render(asset_url, paper_width=None, paper_height=None):
 
     paper_width = int(paper_width)
     paper_height = int(paper_height)
-            
+
     im = Image.new('RGBA', (paper_width, paper_height), (255,255,255,255))
     draw = ImageDraw.Draw(im)
 
@@ -70,8 +70,19 @@ def render(asset_url, paper_width=None, paper_height=None):
                     GlyphWriter(char).write(im)
             except AssetNotFoundError, e:
                 log.warn(str(e))
-                
-    im.save(sys.stdout, format="PNG")
+    return im
+
+def render(asset_url, paper_width=None, paper_height=None):
+    im = _render(asset_url=asset_url, paper_width=paper_width, paper_height=paper_height)
+    return im.save(sys.stdout, format="PNG")
+    
+def render_thumbnail(asset_url, paper_width=None, paper_height=None):
+    INTERMEDIATE_SIZE = (800, 800)
+    
+    im = _render(asset_url=asset_url, paper_width=INTERMEDIATE_SIZE[0], paper_height=INTERMEDIATE_SIZE[1])
+    if (paper_width, paper_height) != INTERMEDIATE_SIZE:
+        im.thumbnail((paper_width, paper_height), Image.ANTIALIAS)
+    return im.save(sys.stdout, format="PNG")
 
 def generate_thumbnail(asset_url, asset_id, x, y):
     from belle.asset import AssetThumbnailGenerator
@@ -87,7 +98,7 @@ if __name__ == '__main__':
     if mode == 'render':
         render(sys.argv[2])
     elif mode == 'render-thumbnail':
-        render(sys.argv[2], paper_width=int(sys.argv[3]), paper_height=int(sys.argv[4]))
+        render_thumbnail(sys.argv[2], paper_width=int(sys.argv[3]), paper_height=int(sys.argv[4]))
     elif mode == 'generate-thumbnail':
         generate_thumbnail(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5])
     else:
