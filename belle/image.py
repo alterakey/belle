@@ -24,7 +24,7 @@ class ImgWriter(object):
         if self.img.width != im.size[0] or self.img.height != im.size[1]:
             im = im.resize((self.img.width, self.img.height))
         if self.img.rotation:
-            im = im.rotate(self.img.rotation)
+            im = im.rotate(-self.img.rotation)
 
         paste_x = self.img.x - im.size[0]/2
         paste_y = self.img.y - im.size[1]/2
