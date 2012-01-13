@@ -47,7 +47,7 @@ def _render(asset_url, paper_width=None, paper_height=None):
                               y=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('y', 0))),
                               width=PixelCoords(paper_width, paper_height).u(float(img_.attrib.get('width', 0))),
                               height=PixelCoords(paper_width, paper_height).v(float(img_.attrib.get('height', 0))),
-                              rotation=float(img_.attrib.get('rotation', 0)))
+                              rotation=float(img_.attrib.get('rotate', 0)))
                     ImgWriter(img).write(im)
                 
                 for char_ in layer.findall('char'):
