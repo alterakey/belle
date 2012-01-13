@@ -30,6 +30,8 @@ class AssetOperator(object):
         pass
 
 class AssetFactoryBase(object):
+    KEY_EXTRACTOR = re.compile(ur'.*([0-9a-f]{64}).*')
+
     class FileCache(object):
         def __init__(self):
             self.content = dict()
@@ -55,10 +57,14 @@ class AssetFactoryBase(object):
         self.files = self.FileCache()
 
     def get(self, type, key):
+        key = self._patch_key(key)
         if key not in self.files:
             tmp = self.extract(type, key)
             self.files[key] = tmp
         return self.files[key]
+
+    def _patch_key(self, key):
+        return self.KEY_EXTRACTOR.sub(u'\g<1>', key)
 
     def cleanup(self):
         pass
