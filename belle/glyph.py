@@ -61,7 +61,10 @@ class GlyphWriter(object):
                  out.size[1] / 2 * (1 / self.OVERRENDER_RATIO - 1))
             offset = (v[0] * math.cos(theta) - v[1] * math.sin(theta),
                       v[0] * math.sin(theta) + v[1] * math.cos(theta))
-            out = out.rotate(-self.char.rotation, expand=1)
+            if self.char.rotation % 90 == 0:
+                out = out.rotate(-self.char.rotation, expand=1, resample=Image.NEAREST)
+            else:
+                out = out.rotate(-self.char.rotation, expand=1, resample=Image.BICUBIC)
         return out, offset
         
     def _load_glyph(self):
