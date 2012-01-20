@@ -245,7 +245,7 @@ class ImageThumbnailer(object):
             src = Image.new("RGBA", (self.x, self.y), (128,128,128))
         dest = cStringIO.StringIO()
         src.thumbnail((self.x, self.y), Image.ANTIALIAS)
-        src.save(dest, format="PNG")
+        src.convert("RGBA").save(dest, format="PNG")
         return dest.getvalue()
 
 class FontThumbnailer(object):
