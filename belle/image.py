@@ -22,7 +22,7 @@ class ImgWriter(object):
     def write(self, to):
         im = Image.open(self.img.src).convert('RGBA')
         if self.img.width != im.size[0] or self.img.height != im.size[1]:
-            im = im.resize((self.img.width, self.img.height), resample=Image.BICUBIC)
+            im = im.resize((self.img.width, self.img.height), resample=Image.ANTIALIAS)
         if self.img.rotation:
             im = im.rotate(-self.img.rotation, expand=1, resample=Image.BICUBIC)
 
