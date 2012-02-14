@@ -37,6 +37,20 @@ class GlyphWriter(object):
         coord = mapping(self.char.height).map(self.char, glyph_)
         to.paste(glyph_, (int(coord[0] + offset[0]), int(coord[1] + offset[1])), glyph_)
 
+        draw = ImageDraw.Draw(to)
+        draw.line([self.char.x-10, self.char.y, self.char.x+10, self.char.y], fill=(255,0,0,255), width=2)
+        draw.line([self.char.x, self.char.y-10, self.char.x, self.char.y+10], fill=(255,0,0,255), width=2)
+
+        mapped = (int(coord[0]), int(coord[1]))
+        draw.line([mapped[0]-10, mapped[1], mapped[0]+10, mapped[1]], fill=(0,255,0,255), width=2)
+        draw.line([mapped[0], mapped[1]-10, mapped[0], mapped[1]+10], fill=(0,255,0,255), width=2)
+
+        target = (int(coord[0] + offset[0]), int(coord[1] + offset[1]))
+        draw.line([target[0]-10, target[1], target[0]+10, target[1]], fill=(0,0,255,255), width=2)
+        draw.line([target[0], target[1]-10, target[0], target[1]+10], fill=(0,0,255,255), width=2)
+
+        draw.line([target[0], target[1], mapped[0], mapped[1]], fill=(0,255,255,255), width=2)
+
     def _composite(self, fill_glyph, outline_glyph):
         size = (1, 1)
         offset = (0, 0)
@@ -54,6 +68,8 @@ class GlyphWriter(object):
             draw.bitmap((0, 0), outline_mask, self.char.outline_color)
         if self.char.is_filled():
             draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
+
+        draw.rectangle([0, 0, out.size[0] - 1, out.size[1] - 1], outline=(255,0,0,255))
 
         if self.char.rotation:
             original = (out.size[0] / 2, out.size[1] / 2)
