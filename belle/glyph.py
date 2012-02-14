@@ -172,8 +172,9 @@ class NormalMapping(object):
         self.basemap = LeftTopMapping(glyph_size)
 
     def map(self, char, glyph):
+        x, y, w, h = char.get_bitmap_geom()
         mapping = self.basemap.map(char, glyph)
-        return (mapping[0] - self.basemap.glyph_size / 2, mapping[1] - self.basemap.glyph_size / 2)
+        return (mapping[0] - w / 2, mapping[1] - h / 2)
 
 class YokogakiGlyphPolicy(object):
     def __init__(self, char):
