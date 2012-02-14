@@ -18,7 +18,7 @@ if sys.version_info[:3] < (2,5,0):
 
 setup(
     name="belle",
-    version='0.1.9',
+    version='0.1.10',
     description="belle, renderer",
     long_description="""""",
     classifiers=[
