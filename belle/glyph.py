@@ -173,8 +173,9 @@ class NormalMapping(object):
 
     def map(self, char, glyph):
         x, y, w, h = char.get_bitmap_geom()
-        mapping = self.basemap.map(char, glyph)
-        return (mapping[0] - w / 2, mapping[1] - h / 2)
+        if char.policy.should_rotate:
+            x, y, w, h = y, x, h, w
+        return (char.x - w / 2, char.y - h / 2)
 
 class YokogakiGlyphPolicy(object):
     def __init__(self, char):
