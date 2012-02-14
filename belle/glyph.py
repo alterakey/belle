@@ -173,14 +173,25 @@ class NormalMapping(object):
 
     def map(self, char, glyph):
         x, y, w, h = char.get_bitmap_geom()
-        if char.policy.should_rotate:
-            x, y, w, h = y, x, h, w
-        return (char.x - w / 2, char.y - h / 2)
+        ox, oy = 0, 0
+        if char.policy.should_flush:
+            if char.tate:
+                ox = (self.basemap.glyph_size - w) / 2
+            else:
+                oy = (self.basemap.glyph_size - h) / 2
+        if char.tate:
+            return (char.x - h / 2 + ox, char.y - w / 2 + oy)
+        else:
+            return (char.x - w / 2 + ox, char.y - h / 2 + oy)
 
-class YokogakiGlyphPolicy(object):
+class GlyphPolicy(object):
     def __init__(self, char):
-        pass
-
+        self.char = char
+        self.name = unicodedata.name(char)
+        self.category = unicodedata.category(char)
+        self.east_asian_width = unicodedata.east_asian_width(char)
+    
+class YokogakiGlyphPolicy(GlyphPolicy):
     @property
     def should_rotate(self):
         return False
@@ -193,15 +204,18 @@ class YokogakiGlyphPolicy(object):
     def should_realign_to_center(self):
         return False
 
-class TategakiGlyphPolicy(object):
+    @property
+    def should_flush(self):
+        if re.search(u'(KATAK|HIRAG)ANA LETTER SMALL', self.name):
+            return True
+        if re.search(u'IDEOGRAPHIC', self.name):
+            if self.category.startswith(u'P'):
+                return True
+        return False
+
+class TategakiGlyphPolicy(GlyphPolicy):
     always_rotate_list = u'＝ー…‥'
     always_realign_list = always_rotate_list
-
-    def __init__(self, char):
-        self.char = char
-        self.name = unicodedata.name(char)
-        self.category = unicodedata.category(char)
-        self.east_asian_width = unicodedata.east_asian_width(char)
 
     @property
     def should_rotate(self):
@@ -217,12 +231,7 @@ class TategakiGlyphPolicy(object):
     def should_transpose(self):
         if self.should_rotate:
             return True
-        if re.search(u'(KATAK|HIRAG)ANA LETTER SMALL', self.name):
-            return True
-        if re.search(u'IDEOGRAPHIC', self.name):
-            if self.category.startswith(u'P'):
-                return True
-        return False
+        return self.should_flush()
 
     @property
     def should_realign_to_center(self):
@@ -230,4 +239,13 @@ class TategakiGlyphPolicy(object):
             return True
         if re.search(u'TILDA|DASH', self.name):
             return True
+        return False
+
+    @property
+    def should_flush(self):
+        if re.search(u'(KATAK|HIRAG)ANA LETTER SMALL', self.name):
+            return True
+        if re.search(u'IDEOGRAPHIC', self.name):
+            if self.category.startswith(u'P'):
+                return True
         return False
