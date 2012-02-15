@@ -52,22 +52,23 @@ def _render(asset_url, paper_width=None, paper_height=None):
                 
                 for char_ in layer.findall('char'):
                     text = char_.text
-                    if not isinstance(text, unicode) and isinstance(text, str):
-                        text = text.decode('UTF-8', 'replace')
-                    char = Character(char=text,
-                                     x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
-                                     y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
-                                     width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
-                                     height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
-                                     rotation=float(char_.attrib.get('rotate', 0)),
-                                     face=assets.get('font', char_.attrib.get('face', u'')),
-                                     color=HTMLColorParser(char_.attrib.get('color')).rgba(),
-                                     outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
-                                     outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
-                                     tate=(char_.attrib.get('tate') is not None),
-                                     pivot=char_.attrib.get('pivot'),
-                                     index=char_.attrib.get('index', 0))
-                    GlyphWriter(char).write(im)
+                    if text is not None:
+                        if not isinstance(text, unicode) and isinstance(text, str):
+                            text = text.decode('UTF-8', 'replace')
+                        char = Character(char=text,
+                                         x=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('x', 0))),
+                                         y=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('y', 0))),
+                                         width=PixelCoords(paper_width, paper_height).u(float(char_.attrib.get('width', 0))),
+                                         height=PixelCoords(paper_width, paper_height).v(float(char_.attrib.get('height', 0))),
+                                         rotation=float(char_.attrib.get('rotate', 0)),
+                                         face=assets.get('font', char_.attrib.get('face', u'')),
+                                         color=HTMLColorParser(char_.attrib.get('color')).rgba(),
+                                         outline_color=HTMLColorParser(char_.attrib.get('outline-color')).rgba(),
+                                         outline_width=PixelCoords(paper_width, paper_height, minimum=1).u(float(char_.attrib.get('outline-edge', 0.0))),
+                                         tate=(char_.attrib.get('tate') is not None),
+                                         pivot=char_.attrib.get('pivot'),
+                                         index=char_.attrib.get('index', 0))
+                        GlyphWriter(char).write(im)
             except AssetNotFoundError, e:
                 log.warn(str(e))
     return im
