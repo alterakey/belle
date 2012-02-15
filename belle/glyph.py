@@ -179,7 +179,7 @@ class NormalMapping(object):
                 ox = (self.basemap.glyph_size - w) / 2
             else:
                 oy = (self.basemap.glyph_size - h) / 2
-        if char.tate:
+        if char.policy.should_rotate:
             return (char.x - h / 2 + ox, char.y - w / 2 + oy)
         else:
             return (char.x - w / 2 + ox, char.y - h / 2 + oy)
