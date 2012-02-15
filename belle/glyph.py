@@ -56,15 +56,19 @@ class GlyphWriter(object):
             draw.bitmap((self.char.outline_width, self.char.outline_width), fill_mask, self.char.color)
 
         if self.char.rotation:
-            theta = -self.char.rotation * math.pi / 180
-            v = (out.size[0] / 2 * (1 / self.OVERRENDER_RATIO - 1), 
-                 out.size[1] / 2 * (1 / self.OVERRENDER_RATIO - 1))
-            offset = (v[0] * math.cos(theta) - v[1] * math.sin(theta),
-                      v[0] * math.sin(theta) + v[1] * math.cos(theta))
+            original = (out.size[0] / 2, out.size[1] / 2)
             if self.char.rotation % 90 == 0:
                 out = out.rotate(-self.char.rotation, expand=1, resample=Image.NEAREST)
             else:
                 out = out.rotate(-self.char.rotation, expand=1, resample=Image.BICUBIC)
+            transformed = (out.size[0] / 2, out.size[1] / 2)
+            if self.char.tate:
+                offset = (original[1] - transformed[0],
+                          original[0] - transformed[1])
+            else:
+                offset = (original[0] - transformed[0],
+                          original[1] - transformed[1])
+                
         return out, offset
         
     def _load_glyph(self):
